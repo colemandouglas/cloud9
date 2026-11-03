@@ -1,0 +1,11 @@
+{
+  "name": "Be Like Water",
+  "short_name": "Be Like Water",
+  "description": "Spine recovery that adapts to you",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#EDF2F0",
+  "theme_color": "#1F3A33",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
