@@ -1,27 +1,24 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Landing from "./pages/Landing";
 import AppShell from "./components/AppShell";
-import ClientHome from "./pages/ClientHome";
-import Intake from "./pages/Intake";
-import ClientCase from "./pages/ClientCase";
-import Flagged from "./pages/Flagged";
-import ClinicianGate from "./pages/ClinicianGate";
-import Queue from "./pages/Queue";
-import ClinicianCase from "./pages/ClinicianCase";
+import Builder from "./pages/Builder";
+import SignIn from "./pages/SignIn";
+import Home from "./pages/Home";
+import JourneyPage from "./pages/Journey";
+import Coach from "./pages/Coach";
+import CoachJourney from "./pages/CoachJourney";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route element={<AppShell />}>
-        <Route path="/app" element={<ClientHome />} />
-        <Route path="/app/intake" element={<Intake />} />
-        <Route path="/app/flagged" element={<Flagged />} />
-        <Route path="/app/case/:id" element={<ClientCase />} />
-        <Route path="/clinician" element={<ClinicianGate />}>
-          <Route index element={<Queue />} />
-          <Route path="case/:id" element={<ClinicianCase />} />
-        </Route>
+        <Route path="/start/:goal" element={<Builder />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/app" element={<Home />} />
+        <Route path="/app/j/:id" element={<JourneyPage />} />
+        <Route path="/coach" element={<Coach />} />
+        <Route path="/coach/:id" element={<CoachJourney />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

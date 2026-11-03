@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "description": "Be Like Water: spine recovery that adapts to you. Marketing site, client app and clinician review queue.",
   "scripts": {
-    "dev": "concurrently -k -n api,web \"node --watch server/index.js\" \"vite\"",
+    "dev": "concurrently -k -n api,web \"node --env-file-if-exists=.env --watch server/index.js\" \"vite\"",
     "build": "tsc --noEmit && vite build",
-    "start": "NODE_ENV=production node server/index.js",
+    "start": "NODE_ENV=production node --env-file-if-exists=.env server/index.js",
     "typecheck": "tsc --noEmit"
   },
   "repository": {
@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/colemandouglas/cloud9#readme",
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.4.0",
     "express": "^5.3.0",
     "multer": "^2.5.0",
     "react": "^19.3.1",

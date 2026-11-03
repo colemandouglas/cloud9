@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { STATUS, type Case, type Status } from "../lib/protocol";
+import type { ReactNode } from "react";
 
 export const Logo = ({ size = 34 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 34 34" aria-hidden="true">
@@ -8,42 +8,24 @@ export const Logo = ({ size = 34 }: { size?: number }) => (
   </svg>
 );
 
-export const Chevron = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-    <path d="M15 5l-7 7 7 7" />
-  </svg>
-);
-
-export const Back = ({ to, children = "Back" }: { to: string; children?: React.ReactNode }) => (
+export const Back = ({ to, children = "Back" }: { to: string; children?: ReactNode }) => (
   <Link className="back" to={to}>
-    <Chevron />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
     {children}
   </Link>
 );
 
-export const Pill = ({ status }: { status: Status }) => {
-  const [label, cls] = STATUS[status] ?? STATUS.new;
-  return <span className={`pill ${cls}`}>{label}</span>;
+const PATHS: Record<string, ReactNode> = {
+  leaf: <path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15M5 19l7-7" />,
+  flag: <><path d="M6 21V4" /><path d="M6 4h11l-2 4 2 4H6" /></>,
+  pulse: <path d="M3 12h4l2-5 4 10 2-5h6" />,
+  sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
+  mountain: <><path d="M3 20l6-10 4 6 2-3 6 7z" /><path d="M9 10l1.5 2.5" /></>,
 };
-
-export const initials = (n: string) =>
-  (n || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
-
-export const when = (t: number) =>
-  t ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
-
-export const CaseRow = ({ c, to }: { c: Case; to: string }) => (
-  <Link className="case" to={to}>
-    <span className="av">{initials(c.name)}</span>
-    <span className="who">
-      <b>{c.name}</b>
-      <span>
-        {c.complaint || "Back pain"}. Submitted {when(c.createdAt)}
-      </span>
-    </span>
-    <Pill status={c.status} />
-  </Link>
+export const GoalIcon = ({ name, size = 26 }: { name: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {PATHS[name]}
+  </svg>
 );
 
-export const RED_FLAG_COPY =
-  "This program might be right for you, but first you need to see your healthcare provider or doctor ASAP! If you have numbness in the groin or trouble controlling your bladder or bowels, go to the emergency room now.";
+export const Spinner = () => <span className="spinner" aria-hidden="true" />;

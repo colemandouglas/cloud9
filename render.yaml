@@ -1,0 +1,26 @@
+# One-click deploy on Render (Blueprint). A persistent disk keeps the
+# database and uploaded records across deploys, so this needs a paid
+# instance type (Starter or above).
+services:
+  - type: web
+    name: be-like-water
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: APP_URL
+        sync: false # e.g. https://be-like-water.onrender.com
+      - key: ADMIN_EMAILS
+        sync: false # your email, comma-separated for more coaches
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false # e.g. Be Like Water <hello@yourdomain.com>
