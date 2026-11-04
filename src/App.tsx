@@ -7,6 +7,9 @@ import Home from "./pages/Home";
 import JourneyPage from "./pages/Journey";
 import Coach from "./pages/Coach";
 import CoachJourney from "./pages/CoachJourney";
+import PointsPage from "./pages/Points";
+import Community from "./pages/Community";
+import Friends from "./pages/Friends";
 
 export default function App() {
   return (
@@ -17,6 +20,9 @@ export default function App() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/app" element={<Home />} />
         <Route path="/app/j/:id" element={<JourneyPage />} />
+        <Route path="/app/points" element={<PointsPage />} />
+        <Route path="/app/community" element={<Community />} />
+        <Route path="/app/friends" element={<Friends />} />
         <Route path="/coach" element={<Coach />} />
         <Route path="/coach/:id" element={<CoachJourney />} />
       </Route>

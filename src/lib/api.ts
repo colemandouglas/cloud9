@@ -20,6 +20,15 @@ export interface Journey extends JourneySummary {
 }
 export interface Me { id: string; email: string; name: string; verified: boolean; isAdmin: boolean; coachWaitlist: boolean }
 
+export interface DayPoints { date: string; steps: number | null; stepPts: number; photoPts: number; weekPts: number; streakPts: number; points: number }
+export interface Points { today: DayPoints; week: DayPoints[]; weekPoints: number; totalPoints: number; streak: number; bestStreak: number; weeksCompleted: number }
+export interface Friend { handle: string; name: string; me: boolean; weekPoints: number; totalPoints: number; streak: number; todaySteps: number | null }
+export interface Post {
+  id: string; kind: string; text: string; date: string; createdAt: number; photoUrl: string | null;
+  author: { handle: string; name: string }; cheers: number; cheered: boolean; mine: boolean; canDelete: boolean;
+}
+export type Video = { videoId: string; title: string; channel: string; reason: string } | { searchUrl: string };
+
 export class ApiError extends Error { constructor(msg: string, public status: number) { super(msg); } }
 
 async function call<T>(url: string, init?: RequestInit): Promise<T> {
@@ -54,6 +63,29 @@ export const api = {
   retry: async (id: string) => (await call<{ journey: Journey }>(`/api/journeys/${id}/retry`, post())).journey,
   joinWaitlist: () => call("/api/coach/waitlist", post()),
   uploadUrl: (id: string) => `/api/uploads/${id}`,
+  checkin: () => call("/api/checkin", post({ date: todayStr() })),
+  points: () => call<Points>(`/api/points?date=${todayStr()}`),
+  setSteps: (date: string, steps: number) =>
+    call<Points>("/api/steps", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date, steps, today: todayStr() }) }),
+  profile: () => call<{ handle: string; name: string }>("/api/profile"),
+  saveProfile: (handle: string, name: string) =>
+    call<{ handle: string; name: string }>("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ handle, name }) }),
+  friends: () => call<{ board: Friend[]; followers: { handle: string; name: string; followingBack: boolean }[] }>(`/api/friends?date=${todayStr()}`),
+  follow: (handle: string) => call("/api/friends", post({ handle })),
+  unfollow: (handle: string) => call(`/api/friends/${encodeURIComponent(handle)}`, { method: "DELETE" }),
+  feed: async (scope: "everyone" | "following", before?: number) =>
+    (await call<{ posts: Post[] }>(`/api/community?scope=${scope}${before ? `&before=${before}` : ""}`)).posts,
+  createPost(kind: string, text: string, photo: Blob | null) {
+    const form = new FormData();
+    form.append("kind", kind);
+    form.append("text", text);
+    form.append("date", todayStr());
+    if (photo) form.append("photo", photo, "photo.jpg");
+    return call<{ id: string }>("/api/community", { method: "POST", body: form });
+  },
+  cheer: (id: string) => call<{ cheered: boolean }>(`/api/community/${id}/cheer`, post()),
+  deletePost: (id: string) => call(`/api/community/${id}`, { method: "DELETE" }),
+  video: (name: string) => call<Video>(`/api/videos?name=${encodeURIComponent(name)}`),
   admin: {
     journeys: () => call<{ journeys: (JourneySummary & { user: { email: string; name: string }; sessionsDone: number; maxPain: number })[]; waitlist: { email: string; name: string; at: number }[] }>("/api/admin/journeys"),
     journey: async (id: string) => (await call<{ journey: Journey }>(`/api/admin/journeys/${id}`)).journey,

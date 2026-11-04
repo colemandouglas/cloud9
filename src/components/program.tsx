@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { addDays, fmtDate, todayStr, type Day, type Journey, type Log } from "../lib/api";
 import { Spinner } from "./ui";
+import { VideoDemo } from "./VideoDemo";
 
 export const BLOCK_WEEKS_UI = 4;
 
@@ -28,6 +29,7 @@ export function SessionCard({ day, date, isToday, log, medical, onSave }: {
   const [pain, setPain] = useState<number | null>(log?.pain ?? null);
   const [note, setNote] = useState(log?.note ?? "");
   const [checked, setChecked] = useState<Set<number>>(new Set());
+  const [demo, setDemo] = useState<number | null>(null);
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const future = date > todayStr();
   const rest = day.type === "rest";
@@ -65,6 +67,10 @@ export function SessionCard({ day, date, isToday, log, medical, onSave }: {
                 <b>{x.name}</b>
                 <span className="rx">{x.prescription}</span>
                 {x.cue && <span className="cue">{x.cue}</span>}
+                <button type="button" className="demo-btn" aria-expanded={demo === i} onClick={() => setDemo(demo === i ? null : i)}>
+                  {demo === i ? "Hide demo" : "▶ Watch demo"}
+                </button>
+                {demo === i && <VideoDemo name={x.name} medical={medical} />}
               </div>
             </li>
           ))}

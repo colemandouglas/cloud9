@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { api, ApiError, addDays, daysBetween, fmtDate, locate, todayStr, type Block, type Day, type Journey, type Log, type Me } from "../lib/api";
 import { BLOCK_WEEKS_UI, SessionCard, PlanView, ProgressView } from "../components/program";
 import { Spinner } from "../components/ui";
+import { StepsPanel, usePoints } from "../components/steps";
 
 export default function JourneyPage() {
   const { id = "" } = useParams();
@@ -129,6 +130,7 @@ function Today({ j, setJ, reload }: { j: Journey; setJ: (j: Journey) => void; re
 
   return (
     <>
+      <TodaySteps />
       {before && <div className="hint" style={{ marginBottom: 14 }}>Your program starts {fmtDate(j.blocks[0].startDate)}. Here's a preview.</div>}
       {pastEnd && !nextBuilding && <div className="hint" style={{ marginBottom: 14 }}>You've finished block {lastReady.idx + 1} (ended {fmtDate(addDays(blockEnd, -1))}). Build your next 4 weeks below.</div>}
 
@@ -175,6 +177,11 @@ function Today({ j, setJ, reload }: { j: Journey; setJ: (j: Journey) => void; re
       {canNext && !nextError && <NextBlock j={j} onDone={(nj) => { setJ(nj); reload(); }} />}
     </>
   );
+}
+
+function TodaySteps() {
+  const { pts, setPts } = usePoints();
+  return pts ? <StepsPanel pts={pts} setPts={setPts} compact /> : null;
 }
 
 function NextBlock({ j, onDone }: { j: Journey; onDone: (j: Journey) => void }) {

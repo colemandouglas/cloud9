@@ -90,3 +90,29 @@ export function spinePattern(worse = [], eases = [], surgery = false, legSymptom
   if (!legSymptoms) return "Back pain without leg symptoms and no clear directional pattern: general stabilization approach.";
   return "Mixed pattern with no clear directional preference: stay conservative and symptom-guided.";
 }
+
+// ---------- Points ----------
+// One place to tune the reward rules. The app explains them from these values.
+export const POINTS = {
+  steps: [
+    [10000, 1, "Hit 10,000 steps"],
+    [15000, 1, "Bonus for 15,000 steps"],
+    [20000, 2, "Bonus for 20,000 steps"],
+  ],
+  perThousandOver: 20000, // +1 for every full 1,000 steps past this
+  weekComplete: 5, // every program session in a week done
+  photo: 1, // food or workout photo post
+  photoDailyMax: 2,
+  streakEvery: 7, // bonus every N days in a row
+  streakBonus: 3,
+};
+
+/** Points earned from one day's steps. */
+export function stepPoints(steps) {
+  let pts = 0;
+  for (const [min, p] of POINTS.steps) if (steps >= min) pts += p;
+  if (steps > POINTS.perThousandOver) pts += Math.floor((steps - POINTS.perThousandOver) / 1000);
+  return pts;
+}
+
+export const POST_KINDS = [["workout", "Workout"], ["food", "Food"], ["win", "Win"]];

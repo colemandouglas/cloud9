@@ -36,6 +36,30 @@ db.exec(`
     start_date TEXT NOT NULL, status TEXT NOT NULL, program TEXT, error TEXT, checkin TEXT NOT NULL DEFAULT '',
     created_at INTEGER NOT NULL, PRIMARY KEY (journey_id, idx)
   );
+  CREATE TABLE IF NOT EXISTS steps (
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, date TEXT NOT NULL, steps INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL, PRIMARY KEY (user_id, date)
+  );
+  CREATE TABLE IF NOT EXISTS checkins (
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, date TEXT NOT NULL, PRIMARY KEY (user_id, date)
+  );
+  CREATE TABLE IF NOT EXISTS follows (
+    follower_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    followee_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at INTEGER NOT NULL, PRIMARY KEY (follower_id, followee_id)
+  );
+  CREATE TABLE IF NOT EXISTS posts (
+    id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, kind TEXT NOT NULL,
+    text TEXT NOT NULL, photo_file TEXT, date TEXT NOT NULL, created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS posts_time ON posts(created_at);
+  CREATE TABLE IF NOT EXISTS cheers (
+    post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, PRIMARY KEY (post_id, user_id)
+  );
+  CREATE TABLE IF NOT EXISTS videos (
+    name_key TEXT PRIMARY KEY, video_id TEXT, title TEXT, channel TEXT, reason TEXT, fetched_at INTEGER NOT NULL
+  );
   CREATE TABLE IF NOT EXISTS logs (
     journey_id TEXT NOT NULL REFERENCES journeys(id) ON DELETE CASCADE, block_idx INTEGER NOT NULL,
     week INTEGER NOT NULL, day INTEGER NOT NULL, done INTEGER NOT NULL DEFAULT 0,
@@ -43,6 +67,11 @@ db.exec(`
     PRIMARY KEY (journey_id, block_idx, week, day)
   );
 `);
+
+// Columns added after the first release.
+const cols = db.prepare(`PRAGMA table_info(users)`).all().map((c) => c.name);
+if (!cols.includes("handle")) db.exec(`ALTER TABLE users ADD COLUMN handle TEXT`);
+db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS users_handle ON users(handle)`);
 
 const now = () => Date.now();
 const J = (s) => (s ? JSON.parse(s) : null);
@@ -60,6 +89,9 @@ export const users = {
   verify: (id) => db.prepare(`UPDATE users SET verified_at = COALESCE(verified_at, ?) WHERE id = ?`).run(now(), id),
   joinWaitlist: (id) => db.prepare(`UPDATE users SET coach_waitlist_at = COALESCE(coach_waitlist_at, ?) WHERE id = ?`).run(now(), id),
   all: () => db.prepare(`SELECT * FROM users ORDER BY created_at DESC`).all(),
+  byHandle: (h) => db.prepare(`SELECT * FROM users WHERE handle = ?`).get(h),
+  setHandle: (id, h) => db.prepare(`UPDATE users SET handle = ? WHERE id = ?`).run(h, id),
+  setDisplayName: (id, n) => db.prepare(`UPDATE users SET name = ? WHERE id = ?`).run(n, id),
 };
 
 // ---------- login tokens ----------

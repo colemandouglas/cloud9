@@ -9,6 +9,8 @@ import {
 } from "../shared/catalog.js";
 import { db, UPLOAD_DIR, users, loginTokens, journeys, uploads, blocks, logs } from "./db.js";
 import { sendEmail, emailConfigured, escapeHtml } from "./email.js";
+import { registerSocial } from "./social.js";
+import { videosConfigured } from "./videos.js";
 import { generateBlock, resumeStuck, aiConfigured, STUB, BLOCK_WEEKS, journeyLengthWeeks } from "./ai.js";
 
 const PROD = process.env.NODE_ENV === "production";
@@ -233,7 +235,7 @@ const upload = multer({
   fileFilter: (_q, file, cb) => cb(null, ACCEPTED.includes(file.mimetype)),
 });
 
-app.get("/api/health", (_req, res) => res.json({ ok: true, ai: aiConfigured ? (STUB ? "stub" : "live") : "off", email: emailConfigured }));
+app.get("/api/health", (_req, res) => res.json({ ok: true, ai: aiConfigured ? (STUB ? "stub" : "live") : "off", email: emailConfigured, videos: videosConfigured }));
 
 // ----- auth -----
 app.get("/api/me", (req, res) => {
@@ -451,6 +453,8 @@ app.post("/api/admin/journeys/:id/regenerate", requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+registerSocial(app, { requireUser, isAdmin });
+
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 // Small db helpers used above that need raw updates.
@@ -477,6 +481,7 @@ app.use((err, _req, res, _next) => {
 app.listen(PORT, () => {
   console.log(`Be Like Water on ${APP_URL} (port ${PORT})`);
   console.log(`  AI: ${aiConfigured ? (STUB ? "TEST MODE (stub programs)" : "Claude") : "NOT CONFIGURED, set ANTHROPIC_API_KEY"}`);
+  console.log(`  Videos: ${videosConfigured ? "YouTube lookup on" : "search links only, set YOUTUBE_API_KEY"}`);
   console.log(`  Email: ${emailConfigured ? "Resend" : "printed to this log"}`);
   console.log(`  Coaches: ${ADMIN_EMAILS.join(", ") || "none, set ADMIN_EMAILS"}`);
   console.log(`  Sign-ups: ${ALLOWED_EMAILS.length ? `invite only (${ALLOWED_EMAILS.length} + coaches)` : "open to anyone"}`);
