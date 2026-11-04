@@ -14,7 +14,12 @@ import { generateBlock, resumeStuck, aiConfigured, STUB, BLOCK_WEEKS, journeyLen
 const PROD = process.env.NODE_ENV === "production";
 const PORT = Number(process.env.PORT) || 8787;
 const APP_URL = (process.env.APP_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+const emailList = (v) => (v || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+const ADMIN_EMAILS = emailList(process.env.ADMIN_EMAILS);
+// Private beta: when set, only these emails (plus coaches) can create accounts.
+const ALLOWED_EMAILS = emailList(process.env.ALLOWED_EMAILS);
+const allowed = (email) => !ALLOWED_EMAILS.length || ALLOWED_EMAILS.includes(email) || ADMIN_EMAILS.includes(email);
+const INVITE_ONLY = "Be Like Water is in a private beta right now. Ask for an invite to join.";
 let SESSION_SECRET = process.env.SESSION_SECRET;
 if (!SESSION_SECRET) {
   if (PROD) {
@@ -241,6 +246,7 @@ app.post("/api/auth/start", async (req, res) => {
   const email = str(req.body?.email, 200).toLowerCase();
   if (!isEmail(email)) return res.status(400).json({ error: "Enter a valid email." });
   if (throttled(email)) return res.status(429).json({ error: "Too many sign-in emails. Try again in an hour." });
+  if (!users.byEmail(email) && !allowed(email)) return res.status(403).json({ error: INVITE_ONLY });
   const user = users.byEmail(email) || users.create(email, str(req.body?.name, 120));
   const link = await sendLoginLink(user);
   res.json({ sent: true, ...(PROD ? {} : { devLink: link }) });
@@ -300,6 +306,7 @@ app.post("/api/journeys", upload.array("files", 5), async (req, res) => {
   if (!user) {
     const email = str(raw.email, 200).toLowerCase();
     if (!isEmail(email)) { cleanup(); return res.status(400).json({ error: "Enter a valid email to save your journey." }); }
+    if (!users.byEmail(email) && !allowed(email)) { cleanup(); return res.status(403).json({ error: INVITE_ONLY }); }
     user = users.byEmail(email);
     if (user) needsVerify = true; // existing account: prove it's theirs first
     else {
@@ -472,5 +479,6 @@ app.listen(PORT, () => {
   console.log(`  AI: ${aiConfigured ? (STUB ? "TEST MODE (stub programs)" : "Claude") : "NOT CONFIGURED, set ANTHROPIC_API_KEY"}`);
   console.log(`  Email: ${emailConfigured ? "Resend" : "printed to this log"}`);
   console.log(`  Coaches: ${ADMIN_EMAILS.join(", ") || "none, set ADMIN_EMAILS"}`);
+  console.log(`  Sign-ups: ${ALLOWED_EMAILS.length ? `invite only (${ALLOWED_EMAILS.length} + coaches)` : "open to anyone"}`);
   resumeStuck();
 });
