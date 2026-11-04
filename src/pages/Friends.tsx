@@ -33,7 +33,28 @@ export default function Friends() {
         </section>
       )}
       <ProfileCard profile={profile} setProfile={setProfile} isAdmin={!!me?.isAdmin} />
+      <DeleteAccount />
     </>
+  );
+}
+
+function DeleteAccount() {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [err, setErr] = useState("");
+  if (!open) return <p className="center" style={{ marginTop: 24 }}><button className="linkbtn muted" onClick={() => setOpen(true)}>Delete my account</button></p>;
+  return (
+    <section className="card danger">
+      <h3>Delete your account</h3>
+      <p className="sub">This permanently deletes your account, journeys, uploaded records, workout logs, steps, posts and Oura data. It can't be undone.</p>
+      <label className="f" htmlFor="del">Type DELETE to confirm</label>
+      <input id="del" type="text" autoCapitalize="characters" value={text} onChange={(e) => setText(e.target.value)} />
+      {err && <p className="err">{err}</p>}
+      <div className="row">
+        <button className="btn small danger-btn" disabled={text !== "DELETE"} onClick={() => api.deleteAccount().then(() => (location.href = "/"), (e) => setErr(e.message))}>Delete everything</button>
+        <button className="btn ghost small" onClick={() => { setOpen(false); setText(""); }}>Cancel</button>
+      </div>
+    </section>
   );
 }
 

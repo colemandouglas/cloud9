@@ -10,11 +10,14 @@ import CoachJourney from "./pages/CoachJourney";
 import PointsPage from "./pages/Points";
 import Community from "./pages/Community";
 import Friends from "./pages/Friends";
+import { Privacy, Terms } from "./pages/Legal";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
       <Route element={<AppShell />}>
         <Route path="/start/:goal" element={<Builder />} />
         <Route path="/signin" element={<SignIn />} />

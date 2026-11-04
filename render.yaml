@@ -16,6 +16,8 @@ services:
         generateValue: true
       - key: APP_URL
         sync: false # e.g. https://be-like-water.onrender.com
+      - key: CONTACT_EMAIL
+        sync: false # shown on /privacy and /terms
       - key: ADMIN_EMAILS
         sync: false # your email, comma-separated for more coaches
       - key: ALLOWED_EMAILS

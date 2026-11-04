@@ -274,6 +274,22 @@ app.post("/auth/verify", express.urlencoded({ extended: false, limit: "2kb" }), 
   res.redirect("/app");
 });
 
+// Permanently deletes the account and everything tied to it (journeys, uploads,
+// logs, steps, posts, follows, Oura link and data) via ON DELETE CASCADE.
+app.delete("/api/account", requireUser, (req, res) => {
+  if (req.body?.confirm !== "DELETE") return res.status(400).json({ error: "Type DELETE to confirm." });
+  const files = [
+    ...db.prepare(`SELECT u.file f FROM uploads u JOIN journeys j ON j.id = u.journey_id WHERE j.user_id = ?`).all(req.user.id),
+    ...db.prepare(`SELECT photo_file f FROM posts WHERE user_id = ? AND photo_file IS NOT NULL`).all(req.user.id),
+  ].map((r) => r.f);
+  db.prepare(`DELETE FROM users WHERE id = ?`).run(req.user.id);
+  for (const f of files) try { unlinkSync(path.join(UPLOAD_DIR, f)); } catch {}
+  res.append("Set-Cookie", "blw=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0");
+  res.json({ ok: true });
+});
+
+app.get("/api/site", (_req, res) => res.json({ contactEmail: process.env.CONTACT_EMAIL || null }));
+
 app.post("/api/auth/logout", (_req, res) => {
   res.append("Set-Cookie", "blw=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0");
   res.json({ ok: true });

@@ -243,7 +243,7 @@ export default function Builder() {
           </Field>
         )}
         <Check checked={extra.consent} onChange={(c) => setExtra({ ...extra, consent: c })}>
-          I understand this is a beta, my program is AI-generated general guidance and not medical advice, and I'll stop and check with a professional if something doesn't feel right.
+          I agree to the <a href="/terms" target="_blank">Terms</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand this is a beta, my program is AI-generated general guidance and not medical advice, and I'll stop and check with a professional if something doesn't feel right.
         </Check>
       </>
     ),

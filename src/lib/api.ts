@@ -52,6 +52,7 @@ export const api = {
   me: async () => (await call<{ user: Me }>("/api/me")).user,
   signIn: (email: string) => call<{ sent: boolean; devLink?: string }>("/api/auth/start", post({ email })),
   signOut: () => call("/api/auth/logout", post()),
+  deleteAccount: () => call("/api/account", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirm: "DELETE" }) }),
   createJourney(data: Record<string, unknown>, files: File[]) {
     const form = new FormData();
     form.append("data", JSON.stringify(data));

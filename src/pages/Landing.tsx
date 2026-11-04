@@ -68,7 +68,7 @@ export default function Landing() {
 
       <footer className="site-footer">
         <div className="inner">
-          <span>© {new Date().getFullYear()} Be Like Water</span>
+          <span>© {new Date().getFullYear()} Be Like Water · <Link to="/privacy">Privacy</Link> · <Link to="/terms">Terms</Link></span>
           <span>Beta. Programs are general guidance, not medical advice. In an emergency, call 911.</span>
         </div>
       </footer>

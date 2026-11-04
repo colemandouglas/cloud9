@@ -44,6 +44,7 @@ export default function AppShell() {
         <footer className="app-foot">
           Signed in as {me.email} ·{" "}
           <button className="linkbtn" onClick={() => api.signOut().then(() => (location.href = "/"))}>Sign out</button>
+          <br /><Link to="/privacy">Privacy</Link> · <Link to="/terms">Terms</Link>
         </footer>
       )}
     </div>

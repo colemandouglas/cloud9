@@ -308,3 +308,13 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .readiness b { display: block; font: 600 18px var(--display); margin-bottom: 2px; }
 .readiness.low { background: var(--amber-bg); color: var(--amber); }
 .readiness.high { background: var(--ok-bg); color: var(--ok); }
+
+/* ---------- Legal ---------- */
+.legal { max-width: 720px; margin: 0 auto; padding: 32px 16px 48px; font-size: 16.5px; }
+.legal h2 { font-size: 38px; }
+.legal h3 { margin: 28px 0 8px; font-size: 22px; }
+.legal ul { padding-left: 20px; }
+.legal li { margin-bottom: 8px; }
+.site-footer a, .app-foot a { color: inherit; }
+.danger { border-color: var(--red); }
+.danger-btn { background: var(--red); color: #fff; }
