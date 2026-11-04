@@ -16,7 +16,8 @@ import { generateBlock, resumeStuck, aiConfigured, STUB, BLOCK_WEEKS, journeyLen
 
 const PROD = process.env.NODE_ENV === "production";
 const PORT = Number(process.env.PORT) || 8787;
-const APP_URL = (process.env.APP_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
+// Render sets RENDER_EXTERNAL_URL automatically, so links work even if APP_URL is missing.
+const APP_URL = (process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
 const emailList = (v) => (v || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 const ADMIN_EMAILS = emailList(process.env.ADMIN_EMAILS);
 // Private beta: when set, only these emails (plus coaches) can create accounts.

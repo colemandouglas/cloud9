@@ -12,7 +12,8 @@ export const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
 export const STUB = process.env.AI_MODE === "stub";
 export const aiConfigured = STUB || !!process.env.ANTHROPIC_API_KEY;
 export const BLOCK_WEEKS = 4;
-const APP_URL = process.env.APP_URL || `http://localhost:${process.env.PORT || 8787}`;
+// Render sets RENDER_EXTERNAL_URL automatically, so links work even if APP_URL is missing.
+const APP_URL = (process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 8787}`).replace(/\/$/, "");
 
 let client = null;
 const getClient = () => (client ??= new Anthropic());
