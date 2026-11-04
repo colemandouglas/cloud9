@@ -24,6 +24,10 @@ services:
         sync: false
       - key: YOUTUBE_API_KEY
         sync: false # exercise demo videos
+      - key: OURA_CLIENT_ID
+        sync: false
+      - key: OURA_CLIENT_SECRET
+        sync: false
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM

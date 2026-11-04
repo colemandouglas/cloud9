@@ -1,4 +1,4 @@
-import { PointsRules, StepsPanel, usePoints } from "../components/steps";
+import { OuraCard, PointsRules, ReadinessTip, StepsPanel, usePoints } from "../components/steps";
 
 export default function PointsPage() {
   const { pts, setPts, err } = usePoints();
@@ -12,7 +12,9 @@ export default function PointsPage() {
         <div className="card stat"><b>{pts.weekPoints}</b><span>points this week</span></div>
         <div className="card stat"><b>{pts.totalPoints}</b><span>all-time points</span></div>
       </div>
+      <ReadinessTip pts={pts} />
       <StepsPanel pts={pts} setPts={setPts} />
+      <OuraCard />
       <section className="card">
         <h3>This week</h3>
         <ul className="week">
@@ -20,7 +22,7 @@ export default function PointsPage() {
             <li key={d.date}>
               <b>{new Date(d.date + "T12:00").toLocaleDateString("en-US", { weekday: "short" })}</b>
               <span>
-                {[d.stepPts && `${d.stepPts} steps`, d.weekPts && `${d.weekPts} program week`, d.photoPts && `${d.photoPts} photos`, d.streakPts && `${d.streakPts} streak bonus`]
+                {[d.stepPts && `Steps +${d.stepPts}`, d.weekPts && `Program week +${d.weekPts}`, d.photoPts && `Photos +${d.photoPts}`, d.streakPts && `Streak +${d.streakPts}`]
                   .filter(Boolean).join(" · ")}
                 <strong style={{ float: "right" }}>+{d.points}</strong>
               </span>
@@ -28,7 +30,7 @@ export default function PointsPage() {
           ))}
           {!pts.week.some((d) => d.points > 0) && <li><span className="muted">No points yet this week. Log your steps or finish a session to get going.</span></li>}
         </ul>
-        <p className="hintline">Best streak: {pts.bestStreak} days · Program weeks completed: {pts.weeksCompleted}</p>
+        <p className="hintline">Best streak: {pts.bestStreak} day{pts.bestStreak === 1 ? "" : "s"} · Program weeks completed: {pts.weeksCompleted}</p>
       </section>
       <PointsRules />
     </>

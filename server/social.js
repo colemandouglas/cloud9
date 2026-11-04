@@ -41,7 +41,7 @@ const photoUpload = multer({
   fileFilter: (_q, f, cb) => cb(null, f.mimetype === "image/jpeg") // the app re-encodes to JPEG, which also strips location data,
 });
 
-export function registerSocial(app, { requireUser, isAdmin }) {
+export function registerSocial(app, { requireUser, isAdmin, syncWearables }) {
   // ----- daily check-in (streaks) -----
   app.post("/api/checkin", requireUser, (req, res) => {
     db.prepare(`INSERT OR IGNORE INTO checkins (user_id, date) VALUES (?, ?)`).run(req.user.id, localDate(req.body?.date));
@@ -49,7 +49,10 @@ export function registerSocial(app, { requireUser, isAdmin }) {
   });
 
   // ----- points + steps -----
-  app.get("/api/points", requireUser, (req, res) => res.json(summarize(req.user.id, localDate(req.query.date))));
+  app.get("/api/points", requireUser, async (req, res) => {
+    await syncWearables(req.user.id);
+    res.json(summarize(req.user.id, localDate(req.query.date)));
+  });
 
   app.put("/api/steps", requireUser, (req, res) => {
     const today = localDate(req.body?.today);

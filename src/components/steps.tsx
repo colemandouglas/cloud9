@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { api, fmtDate, todayStr, type Points } from "../lib/api";
+import { api, fmtDate, todayStr, type OuraStatus, type Points } from "../lib/api";
 import { POINTS } from "../lib/catalog";
 import { Spinner } from "./ui";
 
@@ -17,7 +17,8 @@ export function usePoints() {
 export function StepsPanel({ pts, setPts, compact = false }: { pts: Points; setPts: (p: Points) => void; compact?: boolean }) {
   const today = todayStr();
   const [date, setDate] = useState(today);
-  const current = pts.week.find((d) => d.date === date)?.steps ?? (date === today ? pts.today.steps : null);
+  const day = pts.week.find((d) => d.date === date);
+  const current = day?.steps ?? (date === today ? pts.today.steps : null);
   const [value, setValue] = useState(current != null ? String(current) : "");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -52,6 +53,13 @@ export function StepsPanel({ pts, setPts, compact = false }: { pts: Points; setP
         </div>
         <div className="pts-badge" title="Points this week"><b>{pts.weekPoints}</b><span>pts this week</span></div>
       </div>
+      {(day?.stepsSource === "oura" || day?.activeCal != null) && (
+        <p className="wear">
+          {day?.stepsSource === "oura" && <span className="src">From Oura</span>}
+          {day?.activeCal != null && <span>🔥 {fmt(day.activeCal)} active cal</span>}
+          {day?.totalCal != null && <span>{fmt(day.totalCal)} total burned</span>}
+        </p>
+      )}
       {date === today && (
         <div className="meter" aria-hidden="true"><div style={{ width: `${Math.min(100, (todaySteps / goal) * 100)}%` }} /></div>
       )}
@@ -77,8 +85,57 @@ export function StepsPanel({ pts, setPts, compact = false }: { pts: Points; setP
       {compact ? (
         <p className="hintline">10K = 1 pt · 15K = +1 · 20K = +2 · +1 per 1K after that. <Link to="/app/points">All points</Link></p>
       ) : (
-        <p className="hintline">Copy today's count from your phone's Health or Fitness app. Tap a bar to fix an earlier day.</p>
+        <p className="hintline">Connect Oura below for automatic steps, or copy the count from your phone's Health app. A number you type replaces Oura's for that day.</p>
       )}
+    </section>
+  );
+}
+
+export function ReadinessTip({ pts }: { pts: Points }) {
+  const r = pts.today.readiness;
+  if (r == null) return null;
+  const low = r < 70, high = r >= 85;
+  return (
+    <div className={`readiness ${low ? "low" : high ? "high" : ""}`}>
+      <b>Readiness {r}</b>
+      {low ? "Your body is asking for an easier day. Use the lighter end of each prescription, or swap for an easy walk."
+        : high ? "You're well recovered. A good day to give the session your full effort."
+        : "Solid recovery. Train as planned and listen to your body."}
+      {pts.today.sleepScore != null && <span className="muted"> · Sleep {pts.today.sleepScore}</span>}
+    </div>
+  );
+}
+
+export function OuraCard() {
+  const [s, setS] = useState<OuraStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+  const flash = new URLSearchParams(location.search).get("oura");
+  useEffect(() => { api.oura().then(setS, () => {}); }, []);
+  if (!s) return null;
+  return (
+    <section className="card">
+      <h3>Oura ring</h3>
+      {flash === "connected" && <p className="sub ok">Connected. Your steps, calories and readiness will sync automatically.</p>}
+      {flash === "error" && <p className="err">Couldn't connect to Oura. Try again.</p>}
+      {!s.configured ? (
+        <p className="sub" style={{ margin: 0 }}>Oura isn't switched on for this app yet.</p>
+      ) : s.connected ? (
+        <>
+          <p className="sub">Synced {s.lastSync ? new Date(s.lastSync).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "not yet"}.</p>
+          {s.error && <p className="err">{s.error}</p>}
+          <div className="row" style={{ marginTop: 0 }}>
+            <button className="btn small" disabled={busy} onClick={() => { setBusy(true); api.ouraSync().then((x) => { setS(x); location.reload(); }, () => setBusy(false)); }}>{busy ? <Spinner /> : "Sync now"}</button>
+            {s.error && <a className="btn ghost small" href="/auth/oura/connect">Reconnect</a>}
+            <button className="btn ghost small" onClick={() => confirm("Disconnect Oura and delete the synced data?") && api.ouraDisconnect().then(setS)}>Disconnect</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="sub">Sync steps, calories burned, readiness and sleep from your ring. Steps count toward your points automatically.</p>
+          <a className="btn" href="/auth/oura/connect">Connect Oura</a>
+        </>
+      )}
+      <p className="hintline">Oura data is used for your stats and points only. It's never shared with the AI that writes your program.</p>
     </section>
   );
 }

@@ -17,11 +17,15 @@ export function summarize(userId, today) {
     return byDate.get(date);
   };
 
-  // Steps
-  for (const r of db.prepare(`SELECT date, steps FROM steps WHERE user_id = ?`).all(userId)) {
+  // Wearables first (display + points only; see server/oura.js about AI use),
+  // then manual entries, which win when both exist.
+  for (const r of db.prepare(`SELECT * FROM wearable_daily WHERE user_id = ?`).all(userId)) {
     const e = at(r.date);
-    e.steps = r.steps;
-    e.stepPts = stepPoints(r.steps);
+    Object.assign(e, { activeCal: r.active_cal, totalCal: r.total_cal, readiness: r.readiness, sleepScore: r.sleep_score });
+    if (r.steps != null) Object.assign(e, { steps: r.steps, stepsSource: r.source, stepPts: stepPoints(r.steps) });
+  }
+  for (const r of db.prepare(`SELECT date, steps FROM steps WHERE user_id = ?`).all(userId)) {
+    Object.assign(at(r.date), { steps: r.steps, stepsSource: "manual", stepPts: stepPoints(r.steps) });
   }
 
   // Photo posts (capped per day)

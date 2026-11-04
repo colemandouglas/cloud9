@@ -20,13 +20,16 @@ export interface Journey extends JourneySummary {
 }
 export interface Me { id: string; email: string; name: string; verified: boolean; isAdmin: boolean; coachWaitlist: boolean }
 
-export interface DayPoints { date: string; steps: number | null; stepPts: number; photoPts: number; weekPts: number; streakPts: number; points: number }
+export interface DayPoints {
+  activeCal?: number | null; totalCal?: number | null; readiness?: number | null; sleepScore?: number | null; stepsSource?: string;
+  date: string; steps: number | null; stepPts: number; photoPts: number; weekPts: number; streakPts: number; points: number }
 export interface Points { today: DayPoints; week: DayPoints[]; weekPoints: number; totalPoints: number; streak: number; bestStreak: number; weeksCompleted: number }
 export interface Friend { handle: string; name: string; me: boolean; weekPoints: number; totalPoints: number; streak: number; todaySteps: number | null }
 export interface Post {
   id: string; kind: string; text: string; date: string; createdAt: number; photoUrl: string | null;
   author: { handle: string; name: string }; cheers: number; cheered: boolean; mine: boolean; canDelete: boolean;
 }
+export interface OuraStatus { configured: boolean; connected: boolean; lastSync: number | null; error: string | null }
 export type Video = { videoId: string; title: string; channel: string; reason: string } | { searchUrl: string };
 
 export class ApiError extends Error { constructor(msg: string, public status: number) { super(msg); } }
@@ -85,6 +88,9 @@ export const api = {
   },
   cheer: (id: string) => call<{ cheered: boolean }>(`/api/community/${id}/cheer`, post()),
   deletePost: (id: string) => call(`/api/community/${id}`, { method: "DELETE" }),
+  oura: () => call<OuraStatus>("/api/oura"),
+  ouraSync: () => call<OuraStatus>("/api/oura/sync", post()),
+  ouraDisconnect: () => call<OuraStatus>("/api/oura", { method: "DELETE" }),
   video: (name: string) => call<Video>(`/api/videos?name=${encodeURIComponent(name)}`),
   admin: {
     journeys: () => call<{ journeys: (JourneySummary & { user: { email: string; name: string }; sessionsDone: number; maxPain: number })[]; waitlist: { email: string; name: string; at: number }[] }>("/api/admin/journeys"),

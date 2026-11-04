@@ -11,6 +11,7 @@ import { db, UPLOAD_DIR, users, loginTokens, journeys, uploads, blocks, logs } f
 import { sendEmail, emailConfigured, escapeHtml } from "./email.js";
 import { registerSocial } from "./social.js";
 import { videosConfigured } from "./videos.js";
+import { ouraConfigured, ouraStatus, authorizeUrl, finishConnect, syncOura, disconnectOura, newState } from "./oura.js";
 import { generateBlock, resumeStuck, aiConfigured, STUB, BLOCK_WEEKS, journeyLengthWeeks } from "./ai.js";
 
 const PROD = process.env.NODE_ENV === "production";
@@ -235,7 +236,7 @@ const upload = multer({
   fileFilter: (_q, file, cb) => cb(null, ACCEPTED.includes(file.mimetype)),
 });
 
-app.get("/api/health", (_req, res) => res.json({ ok: true, ai: aiConfigured ? (STUB ? "stub" : "live") : "off", email: emailConfigured, videos: videosConfigured }));
+app.get("/api/health", (_req, res) => res.json({ ok: true, ai: aiConfigured ? (STUB ? "stub" : "live") : "off", email: emailConfigured, videos: videosConfigured, oura: ouraConfigured }));
 
 // ----- auth -----
 app.get("/api/me", (req, res) => {
@@ -453,7 +454,39 @@ app.post("/api/admin/journeys/:id/regenerate", requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-registerSocial(app, { requireUser, isAdmin });
+// ----- Oura -----
+const OURA_REDIRECT = `${APP_URL}/auth/oura/callback`;
+app.get("/api/oura", requireUser, (req, res) => res.json(ouraStatus(req.user.id)));
+app.get("/auth/oura/connect", (req, res) => {
+  const u = currentUser(req);
+  if (!u) return res.redirect("/signin");
+  if (!ouraConfigured) return res.redirect("/app/points?oura=off");
+  const state = sign({ uid: u.id, n: newState(), exp: Date.now() + 15 * 60000 });
+  res.redirect(authorizeUrl(OURA_REDIRECT, state));
+});
+app.get("/auth/oura/callback", async (req, res) => {
+  const s = verifySigned(String(req.query.state || ""));
+  const u = currentUser(req);
+  // The signed-in person must be the one who started the connection.
+  if (!s || !u || s.uid !== u.id || !req.query.code) return res.redirect("/app/points?oura=error");
+  try {
+    await finishConnect(u.id, String(req.query.code), OURA_REDIRECT);
+    res.redirect("/app/points?oura=connected");
+  } catch (err) {
+    console.error("Oura connect failed:", err.message);
+    res.redirect("/app/points?oura=error");
+  }
+});
+app.post("/api/oura/sync", requireUser, async (req, res) => {
+  await syncOura(req.user.id, { force: true });
+  res.json(ouraStatus(req.user.id));
+});
+app.delete("/api/oura", requireUser, (req, res) => {
+  disconnectOura(req.user.id);
+  res.json(ouraStatus(req.user.id));
+});
+
+registerSocial(app, { requireUser, isAdmin, syncWearables: (id) => Promise.race([syncOura(id), new Promise((r) => setTimeout(r, 6000))]) });
 
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
@@ -482,6 +515,7 @@ app.listen(PORT, () => {
   console.log(`Be Like Water on ${APP_URL} (port ${PORT})`);
   console.log(`  AI: ${aiConfigured ? (STUB ? "TEST MODE (stub programs)" : "Claude") : "NOT CONFIGURED, set ANTHROPIC_API_KEY"}`);
   console.log(`  Videos: ${videosConfigured ? "YouTube lookup on" : "search links only, set YOUTUBE_API_KEY"}`);
+  console.log(`  Oura: ${ouraConfigured ? `on (redirect ${OURA_REDIRECT})` : "off, set OURA_CLIENT_ID and OURA_CLIENT_SECRET"}`);
   console.log(`  Email: ${emailConfigured ? "Resend" : "printed to this log"}`);
   console.log(`  Coaches: ${ADMIN_EMAILS.join(", ") || "none, set ADMIN_EMAILS"}`);
   console.log(`  Sign-ups: ${ALLOWED_EMAILS.length ? `invite only (${ALLOWED_EMAILS.length} + coaches)` : "open to anyone"}`);

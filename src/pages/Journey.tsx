@@ -3,7 +3,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { api, ApiError, addDays, daysBetween, fmtDate, locate, todayStr, type Block, type Day, type Journey, type Log, type Me } from "../lib/api";
 import { BLOCK_WEEKS_UI, SessionCard, PlanView, ProgressView } from "../components/program";
 import { Spinner } from "../components/ui";
-import { StepsPanel, usePoints } from "../components/steps";
+import { ReadinessTip, StepsPanel, usePoints } from "../components/steps";
 
 export default function JourneyPage() {
   const { id = "" } = useParams();
@@ -181,7 +181,7 @@ function Today({ j, setJ, reload }: { j: Journey; setJ: (j: Journey) => void; re
 
 function TodaySteps() {
   const { pts, setPts } = usePoints();
-  return pts ? <StepsPanel pts={pts} setPts={setPts} compact /> : null;
+  return pts ? <><ReadinessTip pts={pts} /><StepsPanel pts={pts} setPts={setPts} compact /></> : null;
 }
 
 function NextBlock({ j, onDone }: { j: Journey; onDone: (j: Journey) => void }) {
