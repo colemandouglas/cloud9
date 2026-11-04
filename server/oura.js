@@ -12,6 +12,7 @@ const CLIENT_SECRET = process.env.OURA_CLIENT_SECRET;
 const AUTH_URL = process.env.OURA_AUTH_URL || "https://cloud.ouraring.com/oauth/authorize";
 const API = (process.env.OURA_API_BASE || "https://api.ouraring.com").replace(/\/$/, "");
 const SYNC_DAYS = 14;
+const UA = "BeLikeWater/1.0"; // Oura asks apps to identify themselves
 const STALE_MS = 30 * 60 * 1000;
 export const ouraConfigured = !!(CLIENT_ID && CLIENT_SECRET);
 
@@ -43,7 +44,7 @@ export function authorizeUrl(redirectUri, state) {
 async function tokenRequest(params) {
   const res = await fetch(`${API}/oauth/token`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": UA },
     body: new URLSearchParams({ ...params, client_id: CLIENT_ID, client_secret: CLIENT_SECRET }),
   });
   if (!res.ok) throw new Error(`Oura token request failed (${res.status})`);
@@ -81,7 +82,7 @@ async function collection(token, name, start, end) {
     u.searchParams.set("start_date", start);
     u.searchParams.set("end_date", end);
     if (next) u.searchParams.set("next_token", next);
-    const res = await fetch(u, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(u, { headers: { Authorization: `Bearer ${token}`, "User-Agent": UA } });
     if (res.status === 401) throw Object.assign(new Error("unauthorized"), { status: 401 });
     if (!res.ok) throw new Error(`Oura ${name} request failed (${res.status})`);
     const body = await res.json();
